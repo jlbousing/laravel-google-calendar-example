@@ -501,8 +501,10 @@ class GoogleCalendarController extends Controller
         ]);
 
         try {
+            // Obtener token formateado
             $token = $this->getFormattedToken();
 
+            // Configurar el DTO del evento
             $eventDTO = new EventDTO();
             $eventDTO->setCalendarId($request->calendar_id)
                 ->setTitle($request->title)
@@ -532,19 +534,75 @@ class GoogleCalendarController extends Controller
                 $eventDTO->setSendNotifications($request->send_notifications);
             }
 
-            $event = $this->googleCalendar->createEvent($eventDTO, $token);
+            // Acceder directamente al cliente de Google para crear el evento
+            try {
+                // Obtener objeto del cliente Google directamente
+                $reflection = new \ReflectionClass($this->googleCalendar);
+                $clientProperty = $reflection->getProperty('client');
+                $clientProperty->setAccessible(true);
+                $client = $clientProperty->getValue($this->googleCalendar);
 
-            return response()->json([
-                'message' => 'Evento creado correctamente',
-                'event_id' => $event->getId(),
-                'event' => [
-                    'id' => $event->getId(),
-                    'summary' => $event->getSummary(),
-                    'description' => $event->getDescription(),
-                    'start' => $event->getStart()->getDateTime(),
-                    'end' => $event->getEnd()->getDateTime(),
-                ]
-            ], 201);
+                // Establecer token directamente en el cliente
+                if (is_array($token)) {
+                    Log::debug('Estableciendo token en el cliente Google para crear evento...');
+                    $client->setAccessToken($token);
+
+                    // Comprobar si el token está expirado
+                    if ($client->isAccessTokenExpired()) {
+                        Log::debug('Token expirado, intentando refrescar...');
+
+                        // Si hay refresh_token, intentar renovar el token
+                        if ($refreshToken = $client->getRefreshToken()) {
+                            Log::debug('Refrescando con refresh_token para crear evento');
+                            $client->fetchAccessTokenWithRefreshToken($refreshToken);
+                        } else {
+                            Log::warning('No hay refresh_token disponible para refrescar el token expirado');
+                        }
+                    }
+
+                    // Crear servicio Calendar directamente
+                    $calendarService = new \Google\Service\Calendar($client);
+
+                    // Preparar evento para crear
+                    $event = new \Google\Service\Calendar\Event($eventDTO->toArray());
+
+                    // Insertar evento directamente
+                    Log::debug('Insertando evento en Google Calendar...');
+                    $createdEvent = $calendarService->events->insert($request->calendar_id, $event);
+
+                    Log::debug('Evento creado con ID: ' . $createdEvent->getId());
+
+                    return response()->json([
+                        'message' => 'Evento creado correctamente',
+                        'event_id' => $createdEvent->getId(),
+                        'event' => [
+                            'id' => $createdEvent->getId(),
+                            'summary' => $createdEvent->getSummary(),
+                            'description' => $createdEvent->getDescription(),
+                            'start' => $createdEvent->getStart()->getDateTime(),
+                            'end' => $createdEvent->getEnd()->getDateTime(),
+                        ]
+                    ], 201);
+                } else {
+                    throw new Exception('El token no tiene el formato correcto (debe ser un array)');
+                }
+            } catch (Exception $innerException) {
+                // Si falla el enfoque directo, intentar con el método original
+                Log::warning('Error con enfoque directo, intentando método original: ' . $innerException->getMessage());
+                $event = $this->googleCalendar->createEvent($eventDTO, $token);
+
+                return response()->json([
+                    'message' => 'Evento creado correctamente',
+                    'event_id' => $event->getId(),
+                    'event' => [
+                        'id' => $event->getId(),
+                        'summary' => $event->getSummary(),
+                        'description' => $event->getDescription(),
+                        'start' => $event->getStart()->getDateTime(),
+                        'end' => $event->getEnd()->getDateTime(),
+                    ]
+                ], 201);
+            }
         } catch (Exception $e) {
             return response()->json(['error' => 'Error creating event: ' . $e->getMessage()], 500);
         }
