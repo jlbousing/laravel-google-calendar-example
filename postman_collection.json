@@ -1,0 +1,294 @@
+{
+	"info": {
+		"_postman_id": "1234567-89ab-cdef-0123-456789abcdef",
+		"name": "Google Calendar API",
+		"description": "API para integrar eventos de Google Calendar",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Autenticación",
+			"item": [
+				{
+					"name": "Obtener URL de Auth",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/google-calendar/auth",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"google-calendar",
+								"auth"
+							]
+						},
+						"description": "Obtiene la URL para autenticar con Google"
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"code\": \"CÓDIGO_DE_AUTORIZACIÓN\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/google-calendar/token",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"google-calendar",
+								"token"
+							]
+						},
+						"description": "Obtiene un token después de la autenticación"
+					},
+					"response": []
+				},
+				{
+					"name": "Refrescar Token",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/google-calendar/refresh-token",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"google-calendar",
+								"refresh-token"
+							]
+						},
+						"description": "Refresca un token expirado"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para autenticación con Google"
+		},
+		{
+			"name": "Calendarios",
+			"item": [
+				{
+					"name": "Listar Calendarios",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/google-calendar/calendars",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"google-calendar",
+								"calendars"
+							]
+						},
+						"description": "Lista todos los calendarios disponibles"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para gestionar calendarios"
+		},
+		{
+			"name": "Eventos",
+			"item": [
+				{
+					"name": "Listar Eventos",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/google-calendar/events?calendar_id=primary",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"google-calendar",
+								"events"
+							],
+							"query": [
+								{
+									"key": "calendar_id",
+									"value": "primary",
+									"description": "ID del calendario (primary por defecto)"
+								}
+							]
+						},
+						"description": "Lista todos los eventos del calendario"
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Eventos por Fecha",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/google-calendar/events/by-date?calendar_id=primary",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"google-calendar",
+								"events",
+								"by-date"
+							],
+							"query": [
+								{
+									"key": "calendar_id",
+									"value": "primary",
+									"description": "ID del calendario (primary por defecto)"
+								}
+							]
+						},
+						"description": "Lista eventos ordenados por fecha"
+					},
+					"response": []
+				},
+				{
+					"name": "Crear Evento",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"calendar_id\": \"primary\",\n    \"title\": \"Reunión importante\",\n    \"description\": \"Discutir el nuevo proyecto\",\n    \"start\": \"2023-10-25T09:00:00-05:00\",\n    \"end\": \"2023-10-25T10:00:00-05:00\",\n    \"timezone\": \"America/Mexico_City\",\n    \"location\": \"Sala de conferencias\",\n    \"attendees\": [\n        {\"email\": \"colega@example.com\"},\n        {\"email\": \"gerente@example.com\", \"optional\": true}\n    ],\n    \"send_notifications\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/google-calendar/events",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"google-calendar",
+								"events"
+							]
+						},
+						"description": "Crea un nuevo evento en el calendario"
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener Evento",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/google-calendar/events/{{event_id}}?calendar_id=primary",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"google-calendar",
+								"events",
+								"{{event_id}}"
+							],
+							"query": [
+								{
+									"key": "calendar_id",
+									"value": "primary",
+									"description": "ID del calendario (primary por defecto)"
+								}
+							]
+						},
+						"description": "Obtiene detalles de un evento específico"
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar Evento",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"calendar_id\": \"primary\",\n    \"title\": \"Reunión actualizada\",\n    \"description\": \"Nueva descripción del evento\",\n    \"start\": \"2023-10-25T10:00:00-05:00\",\n    \"end\": \"2023-10-25T11:00:00-05:00\",\n    \"timezone\": \"America/Mexico_City\",\n    \"location\": \"Nueva ubicación\",\n    \"attendees\": [\n        {\"email\": \"colega@example.com\"},\n        {\"email\": \"gerente@example.com\", \"optional\": true},\n        {\"email\": \"nuevo@example.com\"}\n    ],\n    \"send_notifications\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/google-calendar/events/{{event_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"google-calendar",
+								"events",
+								"{{event_id}}"
+							]
+						},
+						"description": "Actualiza un evento existente"
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar Evento",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/google-calendar/events/{{event_id}}?calendar_id=primary",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"google-calendar",
+								"events",
+								"{{event_id}}"
+							],
+							"query": [
+								{
+									"key": "calendar_id",
+									"value": "primary",
+									"description": "ID del calendario (primary por defecto)"
+								}
+							]
+						},
+						"description": "Elimina un evento del calendario"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para gestionar eventos del calendario"
+		}
+	]
+}
